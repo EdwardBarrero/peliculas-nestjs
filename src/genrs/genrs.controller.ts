@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { GenrsService } from './genrs.service';
 import { CreateGenrDto } from './dto/create-genr.dto';
@@ -18,9 +19,11 @@ import {
   ApiNotFoundResponse,
   ApiNoContentResponse,
 } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @ApiTags('genrs')
 @Controller('genrs')
+@UseGuards(AuthGuard)
 export class GenrsController {
   constructor(private readonly genrsService: GenrsService) {}
 
