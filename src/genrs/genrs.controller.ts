@@ -1,64 +1,42 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Param } from '@nestjs/common';
 import { GenrsService } from './genrs.service';
 import { CreateGenrDto } from './dto/create-genr.dto';
 import { UpdateGenrDto } from './dto/update-genr.dto';
+import { PermitModulesEnum } from 'src/roles/roles.interface';
 import {
-  ApiTags,
-  ApiResponse,
-  ApiCreatedResponse,
-  ApiBadRequestResponse,
-  ApiNotFoundResponse,
-  ApiNoContentResponse,
-} from '@nestjs/swagger';
-import { AuthGuard } from 'src/auth/auth.guard';
+  GetProtectedList,
+  GetProtectedRetrieve,
+  PostProtected,
+  PutProtected,
+  DeleteProtected,
+  ControllerProtected,
+} from 'src/global/decorators/endpoint.decorator';
 
-@ApiTags('genrs')
-@Controller('genrs')
-@UseGuards(AuthGuard)
+@ControllerProtected(PermitModulesEnum.Genrs, 'genrs')
 export class GenrsController {
   constructor(private readonly genrsService: GenrsService) {}
 
-  @Post()
-  @ApiCreatedResponse({ type: CreateGenrDto })
-  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @PostProtected(CreateGenrDto)
   create(@Body() createGenrDto: CreateGenrDto) {
     return this.genrsService.create(createGenrDto);
   }
 
-  @Get()
-  @ApiResponse({ status: 200, type: CreateGenrDto, isArray: true })
-  @ApiNotFoundResponse({ description: 'Not Found' })
+  @GetProtectedList(CreateGenrDto)
   findAll() {
     return this.genrsService.findAll();
   }
 
-  @Get(':id')
-  @ApiResponse({ status: 200, type: CreateGenrDto })
-  @ApiNotFoundResponse({ description: 'Not Found' })
+  @GetProtectedRetrieve(':id', CreateGenrDto)
   findOne(@Param('id') id: string) {
     return this.genrsService.findOne(+id);
   }
 
-  @Patch(':id')
-  @ApiResponse({ status: 200, type: CreateGenrDto })
-  @ApiBadRequestResponse({ description: 'Bad Request' })
-  @ApiNotFoundResponse({ description: 'Not Found' })
+  @PutProtected(':id', CreateGenrDto)
   update(@Param('id') id: string, @Body() updateGenrDto: UpdateGenrDto) {
     return this.genrsService.update(+id, updateGenrDto);
   }
 
-  @Delete(':id')
-  @ApiNoContentResponse({ description: 'No Content' })
-  @ApiNotFoundResponse({ description: 'Not Found' })
+  @DeleteProtected(':id')
   remove(@Param('id') id: string) {
     return this.genrsService.remove(+id);
   }
