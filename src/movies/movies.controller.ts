@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -20,14 +21,24 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { I18nContext, I18n } from 'nestjs-i18n';
+import { PermitModulesGuard, PermitActionsGuard } from 'src/roles/roles.guard';
+import { ModulePermits, PermitActions } from 'src/roles/roles.decorator';
+import {
+  PermitModulesEnum,
+  PermitActionsEnum,
+} from 'src/roles/roles.interface';
 
 @ApiTags('movies')
 @Controller('movies')
-@UseGuards(AuthGuard)
+@ModulePermits(PermitModulesEnum.Movies)
+@UseGuards(AuthGuard, PermitModulesGuard)
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Post()
+  @PermitActions(PermitActionsEnum.Create)
+  @UseGuards(PermitActionsGuard)
   @ApiCreatedResponse({ type: CreateMovieDto })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   create(@Body() createMovieDto: CreateMovieDto) {
@@ -35,6 +46,8 @@ export class MoviesController {
   }
 
   @Get()
+  @PermitActions(PermitActionsEnum.Read)
+  @UseGuards(PermitActionsGuard)
   @ApiResponse({ status: 200, type: CreateMovieDto, isArray: true })
   @ApiNotFoundResponse({ description: 'Not Found' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
@@ -43,14 +56,21 @@ export class MoviesController {
   }
 
   @Get(':id')
+  @PermitActions(PermitActionsEnum.Read)
+  @UseGuards(PermitActionsGuard)
   @ApiResponse({ status: 200, type: CreateMovieDto })
   @ApiNotFoundResponse({ description: 'Not Found' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
-  findOne(@Param('id') id: string) {
-    return this.moviesService.findOne(+id);
+  async findOne(@Param('id') id: string, @I18n() i18n: I18nContext) {
+    const movie = await this.moviesService.findOne(+id);
+    if (!movie)
+      throw new NotFoundException(i18n.t('common.movies.find-one.not-found'));
+    return movie;
   }
 
   @Patch(':id')
+  @PermitActions(PermitActionsEnum.Update)
+  @UseGuards(PermitActionsGuard)
   @ApiResponse({ status: 200, type: CreateMovieDto })
   @ApiNoContentResponse({ description: 'No Content' })
   @ApiNotFoundResponse({ description: 'Not Found' })
@@ -60,6 +80,8 @@ export class MoviesController {
   }
 
   @Delete(':id')
+  @PermitActions(PermitActionsEnum.Delete)
+  @UseGuards(PermitActionsGuard)
   @ApiNoContentResponse({ description: 'No Content' })
   @ApiNotFoundResponse({ description: 'Not Found' })
   @ApiBadRequestResponse({ description: 'Bad Request' })

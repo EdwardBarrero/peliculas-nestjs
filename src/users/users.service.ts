@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { FilterUserDto, User } from './entities/user.entity';
+import { FilterUserDto, User, UserAttributes } from './entities/user.entity';
 import { InjectModel } from '@nestjs/sequelize';
 import { encryptPassword, comparePassword } from 'src/config/encryptConfig';
+import { Role } from 'src/roles/entities/roles.entity';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,22 @@ export class UsersService {
   async findOne(id: number) {
     const user = await this.usersModel.findByPk(id);
     return user;
+  }
+
+  async getAllAuthUserData(
+    username: string,
+  ): Promise<UserAttributes | undefined> {
+    const user = await this.usersModel.findOne({
+      where: { username },
+      include: [
+        {
+          model: Role,
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+    const userJson = user?.toJSON();
+    return userJson;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {

@@ -1,0 +1,8 @@
+{
+  "api-name": "Peliculas",
+  "movies": {
+    "find-one": {
+      "not-found": "Pelicula no encontrada"
+    }
+  }
+}

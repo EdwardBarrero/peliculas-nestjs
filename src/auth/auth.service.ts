@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { comparePassword } from 'src/config/encryptConfig';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { UserJwtPayload } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -14,12 +15,15 @@ export class AuthService {
     username: string,
     password: string,
   ): Promise<{ access_token: string } | string> {
-    const users = await this.userService.findAll({ where: { username } });
-    if (!users?.length) return 'user not found';
-    const user = users[0];
+    const user = await this.userService.getAllAuthUserData(username);
+    if (!user) return 'user not found';
     const isMatch = await comparePassword(password, user.password);
     if (!isMatch) throw new UnauthorizedException();
-    const payload = { sub: user.id, username: user.username };
+    const payload: UserJwtPayload = {
+      sub: user.id,
+      username: user.username,
+      userInfo: user,
+    };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
